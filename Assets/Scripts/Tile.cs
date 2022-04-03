@@ -5,7 +5,7 @@ using UnityEngine;
 public class Tile : MonoBehaviour
 {
 
-    private bool tileRevelada = false;     // Indicador da carta virada ou não
+    private bool tileRevelada = false;     // Indicador da carta virada ou nï¿½o
     public Sprite originalCarta;           // Sprite da Carta desejada
     public Sprite backCarta;               // Sprite do avesso da carta
 
@@ -43,5 +43,9 @@ public class Tile : MonoBehaviour
     {
         originalCarta = novaCarta;
     }
-
+    
+    public void setCartaFundo(Sprite fundoCarta)
+    {
+        backCarta = fundoCarta;
+    }
 }

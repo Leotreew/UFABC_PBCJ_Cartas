@@ -237,7 +237,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   carta: {fileID: 3358043945993979660, guid: a8369b77ebe1d7a4ba5c4f1bfcb372fc, type: 3}
-  modoJogo: 0
+  modoJogo: 1
 --- !u!4 &851407603
 Transform:
   m_ObjectHideFlags: 0

@@ -5,27 +5,48 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+// Possiveis modos de jogo de cartas.
+public enum ModoJogo { Normal, Duo, Quadiletras }
+
+// Possui a logica para gerenciar o fluxo do jogo de cartas.
 public class ManageCartas : MonoBehaviour
 {
+    // carta a ser descartada
+    public GameObject carta;
 
-    public GameObject carta;        // carta a ser descartada
-    private bool primeiraCartaSelecionada, segundaCartaSelecionada; // Indicadores para cada carta selecionada em cada linha
-    private GameObject carta1, carta2;          // gameObjects da Primeira e Segunda Carta Selecionada
-    private string linhaCarta1, linhaCarta2;    // Linha da Carta
+    // Modo de jogo a ser carregado.
+    public ModoJogo modoJogo;
 
-    bool timerPausado, timerAcionado;           // Indicador de Pausa no Timer ou Start do Timer
-    float timer;                                // Variável de Tempo
+    // Indicadores para cada carta selecionada em cada linha
+    bool primeiraCartaSelecionada, segundaCartaSelecionada;
 
-    int numTentativas = 0;                      // Numero de Tentativas na Rodada
-    int numAcertos = 0;                         // Numero de Macth de pares acertados
-    AudioSource somOk;                          // Som de Acerto
+    // gameObjects da Primeira e Segunda Carta Selecionada
+    GameObject carta1, carta2;
+
+    // Linha da Carta
+    string linhaCarta1, linhaCarta2;
+
+    // Indicador de Pausa no Timer ou Start do Timer
+    bool timerPausado, timerAcionado;
+
+    // Variavel de Tempo
+    float timer;
+
+    // Numero de Tentativas na Rodada
+    int numTentativas = 0;
+    
+    // Numero de Macth de pares acertados
+    int numAcertos = 0;
+
+    // Som de Acerto
+    AudioSource somOk;
 
     int ultimoJogo = 0;
 
     // Start is called before the first frame update
     void Start()
     {
-        MostraCartas();
+        MostraCartas(modoJogo);
         UpdateTentativas();
         somOk = GetComponent<AudioSource>();
         ultimoJogo = 0;
@@ -72,19 +93,40 @@ public class ManageCartas : MonoBehaviour
         }
     }
 
-    void MostraCartas()
+    void MostraCartas(ModoJogo modo)
     {
-        int[] arrayEmbaralhado = CriaArrayEmbaralhado();
-        int[] arrayEmbaralhado2 = CriaArrayEmbaralhado();
-        
-        for (int i = 0; i < 13; i++)
+        int[] arrayEmbaralhado;
+        int[] arrayEmbaralhado2;
+
+        switch (modo)
         {
-            AddUmaCarta(0, i, arrayEmbaralhado[i]);
-            AddUmaCarta(1, i, arrayEmbaralhado2[i]);
+            case ModoJogo.Normal:
+                arrayEmbaralhado = CriaArrayEmbaralhado();
+                arrayEmbaralhado2 = CriaArrayEmbaralhado();
+                
+                for (int i = 0; i < 13; i++)
+                {
+                    AddUmaCarta(0, i, arrayEmbaralhado[i], modo);
+                    AddUmaCarta(1, i, arrayEmbaralhado2[i], modo);
+                }
+                break;
+            case ModoJogo.Duo:
+                arrayEmbaralhado = CriaArrayEmbaralhado();
+                arrayEmbaralhado2 = CriaArrayEmbaralhado();
+                
+                for (int i = 0; i < 13; i++)
+                {
+                    AddUmaCarta(0, i, arrayEmbaralhado[i], modo);
+                    AddUmaCarta(1, i, arrayEmbaralhado2[i], modo);
+                }
+                break;
+            case ModoJogo.Quadiletras:
+                // TODO: pensar em como organizar as cartas na tela.
+                break;
         }
     }
 
-    void AddUmaCarta(int linha, int rank, int valor)
+    void AddUmaCarta(int linha, int rank, int valor, ModoJogo modo)
     {
         GameObject centro = GameObject.Find("centroDaTela");
         float escalaCartaOriginal = carta.transform.localScale.x;
@@ -97,38 +139,28 @@ public class ManageCartas : MonoBehaviour
         c.name = "" + linha + "_" + valor;
         string nomeDaCarta = "";
         string numeroDaCarta = "";
-        if (valor == 0)
-        {
-            numeroDaCarta = "ace";
+
+        switch (valor) {
+            case 0: numeroDaCarta = "ace"; break;
+            case 10: numeroDaCarta = "jack"; break;
+            case 11: numeroDaCarta = "queen"; break;
+            case 12: numeroDaCarta = "king"; break;
+            default: numeroDaCarta = $"{(valor + 1)}"; break;
         }
-        else if (valor== 10)
+
+        if (modo == ModoJogo.Duo)
         {
-            numeroDaCarta = "jack";
+            // Utiliza fundo azul se for a segunda linha de cartas do modo Duo.
+            if (linha == 1)
+            {
+                Sprite fundo = (Sprite)Resources.Load<Sprite>("playCardBackBlue");
+                GameObject.Find($"{linha}_{valor}").GetComponent<Tile>().setCartaFundo(fundo);
+            }
         }
-        else if (valor == 11)
-        {
-            numeroDaCarta = "queen";
-        }
-        else if (valor == 12)
-        {
-            numeroDaCarta = "king";
-        }
-        else
-        {
-            numeroDaCarta = "" + (valor + 1);
-        }
-        /*
-        if (linha == 1)
-        {
-            nomeDaCarta = numeroDaCarta + "_of_hearts";
-        }
-        else
-        {*/
-            nomeDaCarta = numeroDaCarta + "_of_clubs";
-        //}
+
+        nomeDaCarta = $"{numeroDaCarta}_of_clubs";
         Sprite s1 = (Sprite)Resources.Load<Sprite>(nomeDaCarta);
-        print("S1" + s1);
-        GameObject.Find("" + linha + "_" + valor).GetComponent<Tile>().setCartaOriginal(s1);
+        GameObject.Find($"{linha}_{valor}").GetComponent<Tile>().setCartaOriginal(s1);
     }
 
     public int[] CriaArrayEmbaralhado()
