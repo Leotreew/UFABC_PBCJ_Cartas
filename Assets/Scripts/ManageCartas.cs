@@ -5,16 +5,16 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-// Possiveis modos de jogo de cartas.
+// Possiveis modos de jogo de cartas
 public enum ModoJogo { Normal, Duo, Quadiletras }
 
-// Possui a logica para gerenciar o fluxo do jogo de cartas.
+// Possui a logica para gerenciar o fluxo do jogo de cartas
 public class ManageCartas : MonoBehaviour
 {
     // carta a ser descartada
     public GameObject carta;
 
-    // Modo de jogo a ser carregado.
+    // Modo de jogo a ser carregado
     public ModoJogo modoJogo;
 
     // Indicadores para cada carta selecionada em cada linha
@@ -63,18 +63,17 @@ public class ManageCartas : MonoBehaviour
         
         if(PlayerPrefs.HasKey (nomeDaCena + "TentativasAnterior")){
             tentativasAnterior = PlayerPrefs.GetInt(nomeDaCena + "TentativasAnterior");
-            print("oi");
-            print(tentativasAnterior);
+           
         }
         GameObject.Find("ultimaJogada").GetComponent<Text>().text = ("Jogo Anterior = " + tentativasAnterior);
 
         if(PlayerPrefs.HasKey (nomeDaCena + "TentativasMin")){
             tentativasMin = PlayerPrefs.GetInt(nomeDaCena + "TentativasMin");
-            print("oi1");
-            print(tentativasMin);
+            
+           
             if(tentativasAnterior == 0){
                 tentativasMin = 300;
-                print("Ola");
+                
             }
             if(tentativasMin != 300){
                 GameObject.Find("TentativaMin").GetComponent<Text>().text = ("Menor Tentativa = " + tentativasMin);
@@ -102,19 +101,20 @@ public class ManageCartas : MonoBehaviour
                 timerAcionado = false;
                 if(carta1.tag == carta2.tag)
                 {
-                    ChecarTentativas();
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-                    print(tentativasMin);
+                    
+                    
+                    
                     
                     Destroy(carta1);
                     Destroy(carta2);
                     numAcertos++;
                     somOk.Play();
-                    if(numAcertos == 13)
+
+                    if(numAcertos >= acertosPorModo[modoJogo])
                     {
                         PlayerPrefs.SetInt("Jogadas", numTentativas);
-                        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-                        
+                        SceneManager.LoadScene("MenuInicial");
+                        ChecarTentativas();
                     }
                 }
                 else
@@ -138,89 +138,164 @@ public class ManageCartas : MonoBehaviour
         
     }
 
-    void MostraCartas(ModoJogo modo)
+    void MostraCartas()
     {
-        int[] arrayEmbaralhado;
-        int[] arrayEmbaralhado2;
+        List<List<(int, int)>> baralho;
+        int linhas;
+        int colunas;
 
-        switch (modo)
+        var camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+        Vector3 centro;
+
+        switch (modoJogo)
         {
             case ModoJogo.Normal:
-                arrayEmbaralhado = CriaArrayEmbaralhado();
-                arrayEmbaralhado2 = CriaArrayEmbaralhado();
-                
-                for (int i = 0; i < 13; i++)
+                linhas = 2;
+                colunas = 13;
+
+                centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
+
+                for (int i = 0; i < linhas; i++)
                 {
-                    AddUmaCarta(0, i, arrayEmbaralhado[i], modo);
-                    AddUmaCarta(1, i, arrayEmbaralhado2[i], modo);
+                    baralho = Embaralha(
+                        new List<int>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
+                        new List<int>{ 0 },
+                        1,
+                        colunas
+                    );
+
+                    for (int j = 0; j < colunas; j++)
+                    {
+                        var (nipe, numero) = baralho[0][j];
+                        AddUmaCarta(nipe, numero, 0, i, j, linhas, colunas, centro);
+                    }
                 }
                 break;
             case ModoJogo.Duo:
-                arrayEmbaralhado = CriaArrayEmbaralhado();
-                arrayEmbaralhado2 = CriaArrayEmbaralhado();
-                
-                for (int i = 0; i < 13; i++)
+                linhas = 2;
+                colunas = 13;
+
+                centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
+
+                for (int i = 0; i < linhas; i++)
                 {
-                    AddUmaCarta(0, i, arrayEmbaralhado[i], modo);
-                    AddUmaCarta(1, i, arrayEmbaralhado2[i], modo);
+                    baralho = Embaralha(
+                        new List<int>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
+                        new List<int>{ 0 },
+                        1,
+                        colunas
+                    );
+
+                    for (int j = 0; j < colunas; j++)
+                    {
+                        var (nipe, numero) = baralho[0][j];
+                        AddUmaCarta(nipe, numero, i, i, j, linhas, colunas, centro);
+                    }
                 }
                 break;
             case ModoJogo.Quadiletras:
-                // TODO: pensar em como organizar as cartas na tela.
+                linhas = 4;
+                colunas = 4;
+
+                var centros = new List<Vector3>()
+                {
+                    camera.ViewportToWorldPoint(new Vector3(0.25f, 0.5f, 1.0f)),
+                    camera.ViewportToWorldPoint(new Vector3(0.75f, 0.5f, 1.0f))
+                };
+
+                for (int g = 0; g < 2; g++)
+                {
+                    centro = centros[g];
+
+                    baralho = Embaralha(
+                        new List<int>{ 0, 10, 11, 12 },
+                        new List<int>{ 0, 1, 2, 3 },
+                        linhas,
+                        colunas
+                    );
+
+                    for (int i = 0; i < linhas; i++)
+                    {
+                        for (int j = 0; j < colunas; j++)
+                        {
+                            var (nipe, numero) = baralho[i][j];
+                            AddUmaCarta(nipe, numero, g, i, j, linhas, colunas, centro);
+                        }
+                    }
+                }
                 break;
         }
     }
 
-    void AddUmaCarta(int linha, int rank, int valor, ModoJogo modo)
+    void AddUmaCarta(int nipe, int numero, int grupo, int linha, int coluna, int linhas, int colunas, Vector3 centro)
     {
-        GameObject centro = GameObject.Find("centroDaTela");
-        float escalaCartaOriginal = carta.transform.localScale.x;
-        float fatorEscalaX = (650 * escalaCartaOriginal) / 100.0f;
-        float fatorEscalaY = (945 * escalaCartaOriginal) / 100.0f;
+        var escalaCartaOriginalX = carta.transform.localScale.x;
+        var escalaCartaOriginalY = carta.transform.localScale.y;
+        var fatorEscalaX = (650 * escalaCartaOriginalX) / 100.0f;
+        var fatorEscalaY = (945 * escalaCartaOriginalY) / 100.0f;
 
-        Vector3 novaPosicao = new Vector3(centro.transform.position.x + (rank - 13 / 2) * fatorEscalaX, centro.transform.position.y + ((linha - 0.5f) * fatorEscalaY), centro.transform.position.z);
-        GameObject c = (GameObject)Instantiate(carta, novaPosicao, Quaternion.identity);
-        c.tag = "" + (valor + 1);
-        c.name = "" + linha + "_" + valor;
-        string nomeDaCarta = "";
-        string numeroDaCarta = "";
+        var novaPosicao = new Vector3(
+            centro.x + (coluna - colunas / 2.0f) * fatorEscalaX,
+            centro.y + (linha - linhas / 2.0f) * fatorEscalaY,
+            centro.z
+        );
+        var c = (GameObject)Instantiate(carta, novaPosicao, Quaternion.identity);
+        c.tag = $"{nipe}_{numero}";
+        c.name = $"{grupo}_{linha}_{nipe}_{numero}";
 
-        switch (valor) {
+        var numeroDaCarta = "";
+        switch (numero) {
             case 0: numeroDaCarta = "ace"; break;
             case 10: numeroDaCarta = "jack"; break;
             case 11: numeroDaCarta = "queen"; break;
             case 12: numeroDaCarta = "king"; break;
-            default: numeroDaCarta = $"{(valor + 1)}"; break;
+            default: numeroDaCarta = $"{(numero + 1)}"; break;
         }
 
-        if (modo == ModoJogo.Duo)
+        var nipeDaCarta = "";
+        switch (nipe) {
+            case 1: nipeDaCarta = "hearts"; break;
+            case 2: nipeDaCarta = "spades"; break;
+            case 3: nipeDaCarta = "diamonds"; break;
+            default: nipeDaCarta = "clubs"; break;
+        }
+
+        var original = (Sprite)Resources.Load<Sprite>($"{numeroDaCarta}_of_{nipeDaCarta}");
+        GameObject.Find($"{grupo}_{linha}_{nipe}_{numero}").GetComponent<Tile>().setCartaOriginal(original);
+
+        if (grupo == 1)
         {
-            // Utiliza fundo azul se for a segunda linha de cartas do modo Duo.
-            if (linha == 1)
+            // Utiliza fundo azul se for o segundo grupo de cartas.
+            var fundo = (Sprite)Resources.Load<Sprite>("playCardBackBlue");
+            GameObject.Find($"{grupo}_{linha}_{nipe}_{numero}").GetComponent<Tile>().setCartaFundo(fundo);
+        }
+    }
+
+    public List<List<(int, int)>> Embaralha(List<int> valores, List<int> nipes, int linhas, int colunas)
+    {
+        var cartas = new List<(int, int)>();
+        foreach (var n in nipes)
+        {
+            foreach (var v in valores)
             {
-                Sprite fundo = (Sprite)Resources.Load<Sprite>("playCardBackBlue");
-                GameObject.Find($"{linha}_{valor}").GetComponent<Tile>().setCartaFundo(fundo);
+                cartas.Add((n, v));
+            }
+        }
+        
+        var baralho = new List<List<(int, int)>>();
+        for (int i = 0; i < linhas; i++)
+        {
+            baralho.Add(new List<(int, int)>());
+            for (int j = 0; j < colunas; j++)
+            {
+                var indice = Random.Range(0, cartas.Count);
+                var carta = cartas[indice];
+                baralho[i].Add(carta);
+                cartas.RemoveAt(indice);
             }
         }
 
-        nomeDaCarta = $"{numeroDaCarta}_of_clubs";
-        Sprite s1 = (Sprite)Resources.Load<Sprite>(nomeDaCarta);
-        GameObject.Find($"{linha}_{valor}").GetComponent<Tile>().setCartaOriginal(s1);
-    }
-
-    public int[] CriaArrayEmbaralhado()
-    {
-        int[] novoArray = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-        int temp;
-
-        for (int t = 0; t < 13; t++)
-        {
-            temp = novoArray[t];
-            int r = Random.Range(t, 13);
-            novoArray[t] = novoArray[r];
-            novoArray[r] = temp;
-        }
-        return novoArray;
+        return baralho;
     }
 
     public void CartaSelecionada(GameObject carta)
@@ -258,7 +333,6 @@ public class ManageCartas : MonoBehaviour
     {
         timerPausado = false;
         timerAcionado = true;
-
     }
 
     void UpdateTentativas()
