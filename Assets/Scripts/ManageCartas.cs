@@ -154,7 +154,7 @@ public class ManageCartas : MonoBehaviour
 
                 var centros = new List<Vector3>()
                 {
-                    camera.ViewportToWorldPoint(new Vector3(0.2 5f, 0.5f, 1.0f)),
+                    camera.ViewportToWorldPoint(new Vector3(0.25f, 0.5f, 1.0f)),
                     camera.ViewportToWorldPoint(new Vector3(0.75f, 0.5f, 1.0f))
                 };
 
