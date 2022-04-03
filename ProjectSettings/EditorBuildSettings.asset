@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ModoDuo.unity
     guid: d1995462c6a551d44bcff4bc3ed992ab
+  - enabled: 1
+    path: Assets/Scenes/ModoQuadiletras.unity
+    guid: df061f8aede81df43904de42c56a68e7
   m_configObjects: {}

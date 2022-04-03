@@ -98,7 +98,9 @@ public class ManageCartas : MonoBehaviour
         List<List<(int, int)>> baralho;
         int linhas;
         int colunas;
-        Camera camera;
+
+        var camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+        Vector3 centro;
 
         switch (modoJogo)
         {
@@ -106,7 +108,7 @@ public class ManageCartas : MonoBehaviour
                 linhas = 2;
                 colunas = 13;
 
-                camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+                centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
 
                 for (int i = 0; i < linhas; i++)
                 {
@@ -120,7 +122,7 @@ public class ManageCartas : MonoBehaviour
                     for (int j = 0; j < colunas; j++)
                     {
                         var (nipe, numero) = baralho[0][j];
-                        AddUmaCarta(nipe, numero, 0, i, j, linhas, colunas, camera);
+                        AddUmaCarta(nipe, numero, 0, i, j, linhas, colunas, centro);
                     }
                 }
                 break;
@@ -128,7 +130,7 @@ public class ManageCartas : MonoBehaviour
                 linhas = 2;
                 colunas = 13;
 
-                camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
+                centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
 
                 for (int i = 0; i < linhas; i++)
                 {
@@ -142,7 +144,7 @@ public class ManageCartas : MonoBehaviour
                     for (int j = 0; j < colunas; j++)
                     {
                         var (nipe, numero) = baralho[0][j];
-                        AddUmaCarta(nipe, numero, i, i, j, linhas, colunas, camera);
+                        AddUmaCarta(nipe, numero, i, i, j, linhas, colunas, centro);
                     }
                 }
                 break;
@@ -150,14 +152,15 @@ public class ManageCartas : MonoBehaviour
                 linhas = 4;
                 colunas = 4;
 
-                var cameras = new List<Camera>(){
-                    GameObject.FindWithTag("CameraDireita").GetComponent<Camera>(),
-                    GameObject.FindWithTag("CameraEsquerda").GetComponent<Camera>(),
+                var centros = new List<Vector3>()
+                {
+                    camera.ViewportToWorldPoint(new Vector3(0.2 5f, 0.5f, 1.0f)),
+                    camera.ViewportToWorldPoint(new Vector3(0.75f, 0.5f, 1.0f))
                 };
 
-                for (int g = 0; g < 1; g++)
+                for (int g = 0; g < 2; g++)
                 {
-                    camera = cameras[g];
+                    centro = centros[g];
 
                     baralho = Embaralha(
                         new List<int>{ 0, 10, 11, 12 },
@@ -171,7 +174,7 @@ public class ManageCartas : MonoBehaviour
                         for (int j = 0; j < colunas; j++)
                         {
                             var (nipe, numero) = baralho[i][j];
-                            AddUmaCarta(nipe, numero, g, i, j, linhas, colunas, camera);
+                            AddUmaCarta(nipe, numero, g, i, j, linhas, colunas, centro);
                         }
                     }
                 }
@@ -179,35 +182,21 @@ public class ManageCartas : MonoBehaviour
         }
     }
 
-    void AddUmaCarta(int nipe, int numero, int grupo, int linha, int coluna, int linhas, int colunas, Camera camera)
+    void AddUmaCarta(int nipe, int numero, int grupo, int linha, int coluna, int linhas, int colunas, Vector3 centro)
     {
-        var centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
-
-        var paddingX = 100;
-        var paddingY = 10;
-        var largura = camera.pixelWidth - paddingX;
-        var altura = camera.pixelHeight - paddingY;
-
         var escalaCartaOriginalX = carta.transform.localScale.x;
         var escalaCartaOriginalY = carta.transform.localScale.y;
-        var fatorEscalaX = (largura * escalaCartaOriginalX) / 100.0f;
-        var fatorEscalaY = (altura * escalaCartaOriginalY) / 100.0f;
-
-        if (fatorEscalaX < 2.0f) fatorEscalaX = 2.0f;
-        if (fatorEscalaY < 2.5f) fatorEscalaY = 2.5f;
-
-        print($"g: {grupo} centro: {centro}");
-        print($"g: {grupo} camera: {largura}x{altura}");
-        print($"g: {grupo} escala: {escalaCartaOriginalX}x{escalaCartaOriginalY}");
+        var fatorEscalaX = (650 * escalaCartaOriginalX) / 100.0f;
+        var fatorEscalaY = (945 * escalaCartaOriginalY) / 100.0f;
 
         var novaPosicao = new Vector3(
-            centro.x + (coluna - colunas / 2) * fatorEscalaX,
-            centro.y + (linha - linhas / 2) * fatorEscalaY,
+            centro.x + (coluna - colunas / 2.0f) * fatorEscalaX,
+            centro.y + (linha - linhas / 2.0f) * fatorEscalaY,
             centro.z
         );
         var c = (GameObject)Instantiate(carta, novaPosicao, Quaternion.identity);
         c.tag = $"{nipe}_{numero}";
-        c.name = $"{linha}_{nipe}_{numero}";
+        c.name = $"{grupo}_{linha}_{nipe}_{numero}";
 
         var numeroDaCarta = "";
         switch (numero) {
@@ -227,13 +216,13 @@ public class ManageCartas : MonoBehaviour
         }
 
         var original = (Sprite)Resources.Load<Sprite>($"{numeroDaCarta}_of_{nipeDaCarta}");
-        GameObject.Find($"{linha}_{nipe}_{numero}").GetComponent<Tile>().setCartaOriginal(original);
+        GameObject.Find($"{grupo}_{linha}_{nipe}_{numero}").GetComponent<Tile>().setCartaOriginal(original);
 
         if (grupo == 1)
         {
             // Utiliza fundo azul se for o segundo grupo de cartas.
             var fundo = (Sprite)Resources.Load<Sprite>("playCardBackBlue");
-            GameObject.Find($"{linha}_{nipe}_{numero}").GetComponent<Tile>().setCartaFundo(fundo);
+            GameObject.Find($"{grupo}_{linha}_{nipe}_{numero}").GetComponent<Tile>().setCartaFundo(fundo);
         }
     }
 
