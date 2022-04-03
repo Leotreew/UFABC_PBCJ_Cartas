@@ -41,7 +41,13 @@ public class ManageCartas : MonoBehaviour
     // Som de Acerto
     AudioSource somOk;
 
-    int ultimoJogo = 0;
+    // Acertos por modo de jogo
+    Dictionary<ModoJogo, int> acertosPorModo = new Dictionary<ModoJogo, int>()
+    {
+        {ModoJogo.Normal, 13},
+        {ModoJogo.Duo, 13},
+        {ModoJogo.Quadiletras, 16},
+    };
 
     // Start is called before the first frame update
     void Start()
@@ -49,9 +55,9 @@ public class ManageCartas : MonoBehaviour
         MostraCartas();
         UpdateTentativas();
         somOk = GetComponent<AudioSource>();
-        ultimoJogo = 0;
+        
+        var ultimoJogo = PlayerPrefs.GetInt("Jogadas", 0);
         GameObject.Find("ultimaJogada").GetComponent<Text>().text = ("Jogo Anterior = " + ultimoJogo);
-
     }
 
     // Update is called once per frame
@@ -71,10 +77,11 @@ public class ManageCartas : MonoBehaviour
                     Destroy(carta2);
                     numAcertos++;
                     somOk.Play();
-                    if(numAcertos == 13)
+
+                    if(numAcertos >= acertosPorModo[modoJogo])
                     {
                         PlayerPrefs.SetInt("Jogadas", numTentativas);
-                        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                        SceneManager.LoadScene("MenuInicial");
                     }
                 }
                 else
@@ -285,7 +292,6 @@ public class ManageCartas : MonoBehaviour
     {
         timerPausado = false;
         timerAcionado = true;
-
     }
 
     void UpdateTentativas()
