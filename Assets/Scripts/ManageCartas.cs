@@ -48,43 +48,32 @@ public class ManageCartas : MonoBehaviour
     // Som de Acerto
     AudioSource somOk;
 
-    
+    // Acertos necessarios para terminar o jogo, por modo
+    Dictionary<ModoJogo, int> acertosPorModo = new Dictionary<ModoJogo, int>()
+    {
+        {ModoJogo.Normal, 13},
+        {ModoJogo.Duo, 13},
+        {ModoJogo.Quadiletras, 16},
+    };
 
     // Start is called before the first frame update
     void Start()
     {
-        nomeDaCena = SceneManager.GetActiveScene ().name;
+        nomeDaCena = SceneManager.GetActiveScene().name;        
         
-        
-        MostraCartas(modoJogo);
+        MostraCartas();
         UpdateTentativas();
         
         somOk = GetComponent<AudioSource>();
         
-        if(PlayerPrefs.HasKey (nomeDaCena + "TentativasAnterior")){
-            tentativasAnterior = PlayerPrefs.GetInt(nomeDaCena + "TentativasAnterior");
-           
-        }
+        tentativasAnterior = PlayerPrefs.GetInt(nomeDaCena + "TentativasAnterior", 0);
         GameObject.Find("ultimaJogada").GetComponent<Text>().text = ("Jogo Anterior = " + tentativasAnterior);
 
-        if(PlayerPrefs.HasKey (nomeDaCena + "TentativasMin")){
-            tentativasMin = PlayerPrefs.GetInt(nomeDaCena + "TentativasMin");
-            
-           
-            if(tentativasAnterior == 0){
-                tentativasMin = 300;
-                
-            }
-            if(tentativasMin != 300){
-                GameObject.Find("TentativaMin").GetComponent<Text>().text = ("Menor Tentativa = " + tentativasMin);
-            }
-            
+        tentativasMin = PlayerPrefs.GetInt(nomeDaCena + "TentativasMin", 300);
+        if (tentativasMin != 300)
+        {
+            GameObject.Find("TentativaMin").GetComponent<Text>().text = ("Menor Tentativa = " + tentativasMin);
         }
-        
-        
-        
-        
-
     }
 
     // Update is called once per frame
@@ -101,10 +90,6 @@ public class ManageCartas : MonoBehaviour
                 timerAcionado = false;
                 if(carta1.tag == carta2.tag)
                 {
-                    
-                    
-                    
-                    
                     Destroy(carta1);
                     Destroy(carta2);
                     numAcertos++;
@@ -112,9 +97,10 @@ public class ManageCartas : MonoBehaviour
 
                     if(numAcertos >= acertosPorModo[modoJogo])
                     {
-                        PlayerPrefs.SetInt("Jogadas", numTentativas);
-                        SceneManager.LoadScene("MenuInicial");
+                        ChecarTentativaAnterior();
                         ChecarTentativas();
+                        PlayerPrefs.Save();
+                        SceneManager.LoadScene("MenuInicial");
                     }
                 }
                 else
@@ -131,11 +117,6 @@ public class ManageCartas : MonoBehaviour
                 timer = 0;
             }
         }
-    ChecarTentativaAnterior();
-    
-    
-    
-        
     }
 
     void MostraCartas()
@@ -341,20 +322,19 @@ public class ManageCartas : MonoBehaviour
     
     }
 
-    public void ChecarTentativas(){
-        if(tentativasMin > numTentativas){
+    public void ChecarTentativas()
+    {
+        if (tentativasMin > numTentativas)
+        {
             tentativasMin = numTentativas;
-            PlayerPrefs.SetInt (nomeDaCena + "TentativasMin", tentativasMin);
+            PlayerPrefs.SetInt(nomeDaCena + "TentativasMin", tentativasMin);
             print("Dentro");
         }
-
-        
     }
 
-    public void ChecarTentativaAnterior(){
+    public void ChecarTentativaAnterior()
+    {
         tentativasAnterior = numTentativas;
-        PlayerPrefs.SetInt (nomeDaCena + "TentativasAnterior", tentativasAnterior);
-
-        
+        PlayerPrefs.SetInt(nomeDaCena + "TentativasAnterior", tentativasAnterior);
     }
 }
