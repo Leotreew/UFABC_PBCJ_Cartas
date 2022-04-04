@@ -5,10 +5,31 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-// Possiveis modos de jogo de cartas
+/// <summary>
+/// Possiveis modos de jogo de cartas
+/// </summary>
 public enum ModoJogo { Normal, Duo, Quadiletras }
 
-// Possui a logica para gerenciar o fluxo do jogo de cartas
+/// <summary>
+/// Armazena informacoes adicionais de um modo de jogo de cartas
+/// </summary>
+public class ModoJogoInfo
+{
+    /// <summary>
+    /// Quantidade de acertos para finalizar o jogo
+    /// </summary>
+    public int Acertos { get; set; }
+
+    /// <summary>
+    /// Quantidade maxima de tentativas para considerar como uma vitoria
+    /// </summary>
+    /// <value></value>
+    public int Vitoria { get; set; }
+}
+
+/// <summary>
+/// Possui a logica para gerenciar o fluxo do jogo de cartas
+/// </summary>
 public class ManageCartas : MonoBehaviour
 {
     // carta a ser descartada
@@ -34,7 +55,7 @@ public class ManageCartas : MonoBehaviour
 
     // Numero de Tentativas na Rodada
     int numTentativas = 0;
-    
+
     // Numero de Macth de pares acertados
     int numAcertos = 0;
 
@@ -49,23 +70,25 @@ public class ManageCartas : MonoBehaviour
     AudioSource somOk;
 
     // Acertos necessarios para terminar o jogo, por modo
-    Dictionary<ModoJogo, int> acertosPorModo = new Dictionary<ModoJogo, int>()
+    Dictionary<ModoJogo, ModoJogoInfo> infoPorModo = new Dictionary<ModoJogo, ModoJogoInfo>()
     {
-        {ModoJogo.Normal, 13},
-        {ModoJogo.Duo, 13},
-        {ModoJogo.Quadiletras, 16},
+        {ModoJogo.Normal, new ModoJogoInfo() { Acertos = 13, Vitoria = 45 }},
+        {ModoJogo.Duo, new ModoJogoInfo() { Acertos = 13, Vitoria = 45 }},
+        {ModoJogo.Quadiletras, new ModoJogoInfo() { Acertos = 13, Vitoria = 68 }},
     };
 
     // Start is called before the first frame update
     void Start()
     {
-        nomeDaCena = SceneManager.GetActiveScene().name;        
-        
+        nomeDaCena = SceneManager.GetActiveScene().name;
+        PlayerPrefs.SetString("ultimaCena", nomeDaCena);
+        PlayerPrefs.Save();
+
         MostraCartas();
         UpdateTentativas();
-        
+
         somOk = GetComponent<AudioSource>();
-        
+
         tentativasAnterior = PlayerPrefs.GetInt(nomeDaCena + "TentativasAnterior", 0);
         GameObject.Find("ultimaJogada").GetComponent<Text>().text = ("Jogo Anterior = " + tentativasAnterior);
 
@@ -79,28 +102,31 @@ public class ManageCartas : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
         if (timerAcionado)
         {
             timer += Time.deltaTime;
-            
-            if(timer > 1)
+
+            if (timer > 1)
             {
                 timerPausado = true;
                 timerAcionado = false;
-                if(carta1.tag == carta2.tag)
+                if (carta1.tag == carta2.tag)
                 {
                     Destroy(carta1);
                     Destroy(carta2);
                     numAcertos++;
                     somOk.Play();
 
-                    if(numAcertos >= acertosPorModo[modoJogo])
+                    if (numAcertos >= infoPorModo[modoJogo].Acertos)
                     {
                         ChecarTentativaAnterior();
                         ChecarTentativas();
+
                         PlayerPrefs.Save();
-                        SceneManager.LoadScene("MenuInicial");
+
+                        var cena = (numTentativas <= infoPorModo[modoJogo].Vitoria) ? "Vitoria" : "Derrota";
+                        SceneManager.LoadScene(cena);
                     }
                 }
                 else
@@ -139,8 +165,8 @@ public class ManageCartas : MonoBehaviour
                 for (int i = 0; i < linhas; i++)
                 {
                     baralho = Embaralha(
-                        new List<int>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
-                        new List<int>{ 0 },
+                        new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
+                        new List<int> { 0 },
                         1,
                         colunas
                     );
@@ -161,8 +187,8 @@ public class ManageCartas : MonoBehaviour
                 for (int i = 0; i < linhas; i++)
                 {
                     baralho = Embaralha(
-                        new List<int>{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
-                        new List<int>{ 0 },
+                        new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
+                        new List<int> { 0 },
                         1,
                         colunas
                     );
@@ -189,8 +215,8 @@ public class ManageCartas : MonoBehaviour
                     centro = centros[g];
 
                     baralho = Embaralha(
-                        new List<int>{ 0, 10, 11, 12 },
-                        new List<int>{ 0, 1, 2, 3 },
+                        new List<int> { 0, 10, 11, 12 },
+                        new List<int> { 0, 1, 2, 3 },
                         linhas,
                         colunas
                     );
@@ -225,7 +251,8 @@ public class ManageCartas : MonoBehaviour
         c.name = $"{grupo}_{linha}_{nipe}_{numero}";
 
         var numeroDaCarta = "";
-        switch (numero) {
+        switch (numero)
+        {
             case 0: numeroDaCarta = "ace"; break;
             case 10: numeroDaCarta = "jack"; break;
             case 11: numeroDaCarta = "queen"; break;
@@ -234,7 +261,8 @@ public class ManageCartas : MonoBehaviour
         }
 
         var nipeDaCarta = "";
-        switch (nipe) {
+        switch (nipe)
+        {
             case 1: nipeDaCarta = "hearts"; break;
             case 2: nipeDaCarta = "spades"; break;
             case 3: nipeDaCarta = "diamonds"; break;
@@ -262,7 +290,7 @@ public class ManageCartas : MonoBehaviour
                 cartas.Add((n, v));
             }
         }
-        
+
         var baralho = new List<List<(int, int)>>();
         for (int i = 0; i < linhas; i++)
         {
@@ -307,7 +335,7 @@ public class ManageCartas : MonoBehaviour
         DisparaTimer();
         numTentativas++;
         UpdateTentativas();
-        
+
 
     }
 
@@ -320,7 +348,7 @@ public class ManageCartas : MonoBehaviour
     void UpdateTentativas()
     {
         GameObject.Find("numTentativas").GetComponent<Text>().text = "Tentativas: " + numTentativas;
-    
+
     }
 
     public void ChecarTentativas()

@@ -8,17 +8,23 @@ public class ManageBotoes : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public void StartCenario(string cenario)
+    public void StartCenario(string cena)
     {
-        SceneManager.LoadScene(cenario);
+        SceneManager.LoadScene(cena);
+    }
+
+    public void Voltar()
+    {
+        var cena = PlayerPrefs.GetString("ultimaCena");
+        SceneManager.LoadScene(cena);
     }
 }

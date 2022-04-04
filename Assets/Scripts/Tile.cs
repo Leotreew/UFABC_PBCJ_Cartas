@@ -23,7 +23,7 @@ public class Tile : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     // Acao a executar ao clicar na carta
@@ -51,7 +51,7 @@ public class Tile : MonoBehaviour
     {
         originalCarta = novaCarta;
     }
-    
+
     // Define qual o sprite para ser usado como fundo da carta
     public void setCartaFundo(Sprite fundoCarta)
     {
