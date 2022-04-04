@@ -11,9 +11,9 @@ using UnityEngine.SceneManagement;
 public enum ModoJogo { Normal, Duo, Quadiletras }
 
 /// <summary>
-/// Armazena informacoes adicionais de um modo de jogo de cartas
+/// Armazena configuracoes de um modo de jogo de cartas
 /// </summary>
-public class ModoJogoInfo
+public class ModoJogoConfig
 {
     /// <summary>
     /// Quantidade de acertos para finalizar o jogo
@@ -23,7 +23,6 @@ public class ModoJogoInfo
     /// <summary>
     /// Quantidade maxima de tentativas para considerar como uma vitoria
     /// </summary>
-    /// <value></value>
     public int Vitoria { get; set; }
 }
 
@@ -32,55 +31,87 @@ public class ModoJogoInfo
 /// </summary>
 public class ManageCartas : MonoBehaviour
 {
-    // carta a ser descartada
+    /// <summary>
+    /// Carta a ser descartada
+    /// </summary>
     public GameObject carta;
 
-    // Modo de jogo a ser carregado
+    /// <summary>
+    /// Modo de jogo a ser carregado
+    /// </summary>
     public ModoJogo modoJogo;
 
-    // Indicadores para cada carta selecionada em cada linha
+    /// <summary>
+    /// Indicadores para cada carta selecionada em cada linha
+    /// </summary>
     bool primeiraCartaSelecionada, segundaCartaSelecionada;
 
-    // gameObjects da Primeira e Segunda Carta Selecionada
+    /// <summary>
+    /// GameObjects da Primeira e Segunda Carta Selecionada
+    /// </summary>
     GameObject carta1, carta2;
 
-    // Linha da Carta
-    string linhaCarta1, linhaCarta2;
-
-    // Indicador de Pausa no Timer ou Start do Timer
+    /// <summary>
+    /// Indicador de Pausa no Timer ou Start do Timer
+    /// </summary>
     bool timerPausado, timerAcionado;
 
-    // Variavel de Tempo
+    /// <summary>
+    /// Variavel de Tempo
+    /// </summary>
     float timer;
 
-    // Numero de Tentativas na Rodada
+    /// <summary>
+    /// Numero de Tentativas na Rodada
+    /// </summary>
     int numTentativas = 0;
 
-    // Numero de Macth de pares acertados
+    /// <summary>
+    /// Numero de Macth de pares acertados
+    /// </summary>
     int numAcertos = 0;
 
-    // Salvar o nome da cena
+    /// <summary>
+    /// Salvar o nome da cena
+    /// </summary>
     string nomeDaCena;
 
+    /// <summary>
+    /// Salvar o numero de tentativas da partida anterior
+    /// </summary>
     int tentativasAnterior = 0;
 
+    /// <summary>
+    /// Salvar o record de tentativas
+    /// </summary>
     int tentativasMin = 300;
 
-    // Som de Acerto
+    /// <summary>
+    /// Som de Acerto
+    /// </summary>
     AudioSource somOk;
 
-    // Acertos necessarios para terminar o jogo, por modo
-    Dictionary<ModoJogo, ModoJogoInfo> infoPorModo = new Dictionary<ModoJogo, ModoJogoInfo>()
+    /// <summary>
+    /// Configuracoes gerais para cada modo de jogo
+    /// </summary>
+    /// <typeparam name="ModoJogo">Modo de jogo a ser configurado</typeparam>
+    /// <typeparam name="ModoJogoConfig">Dados de configuracao para o modo de jogo</typeparam>
+    Dictionary<ModoJogo, ModoJogoConfig> infoPorModo = new Dictionary<ModoJogo, ModoJogoConfig>()
     {
-        {ModoJogo.Normal, new ModoJogoInfo() { Acertos = 13, Vitoria = 45 }},
-        {ModoJogo.Duo, new ModoJogoInfo() { Acertos = 13, Vitoria = 45 }},
-        {ModoJogo.Quadiletras, new ModoJogoInfo() { Acertos = 13, Vitoria = 68 }},
+        {ModoJogo.Normal, new ModoJogoConfig() { Acertos = 13, Vitoria = 45 }},
+        {ModoJogo.Duo, new ModoJogoConfig() { Acertos = 13, Vitoria = 45 }},
+        {ModoJogo.Quadiletras, new ModoJogoConfig() { Acertos = 13, Vitoria = 68 }},
     };
 
-    // Start is called before the first frame update
+    /// <summary>
+    /// Start is called before the first frame update
+    /// </summary>
     void Start()
     {
+        // Utilizado para conseguir o nome da cena atual 
         nomeDaCena = SceneManager.GetActiveScene().name;
+
+        // Guarda a cena atual para uso na tela de vitoria / derrota
         PlayerPrefs.SetString("ultimaCena", nomeDaCena);
         PlayerPrefs.Save();
 
@@ -89,20 +120,34 @@ public class ManageCartas : MonoBehaviour
 
         somOk = GetComponent<AudioSource>();
 
-        tentativasAnterior = PlayerPrefs.GetInt(nomeDaCena + "TentativasAnterior", 0);
-        GameObject.Find("ultimaJogada").GetComponent<Text>().text = ("Jogo Anterior = " + tentativasAnterior);
+        /* Esses 3 ifs são utilizados na logica de colocar na tela os valores de Tentativas minimo/atual/anterior */
+        if (PlayerPrefs.HasKey(nomeDaCena + "TentativasAnterior"))
+        {
+            tentativasAnterior = PlayerPrefs.GetInt(nomeDaCena + "TentativasAnterior");
+        }
 
-        tentativasMin = PlayerPrefs.GetInt(nomeDaCena + "TentativasMin", 300);
+        GameObject.Find("ultimaJogada").GetComponent<Text>().text = ("Jogo Anterior = " + tentativasAnterior);
+        if (PlayerPrefs.HasKey(nomeDaCena + "TentativasMin"))
+        {
+            tentativasMin = PlayerPrefs.GetInt(nomeDaCena + "TentativasMin");
+            if (tentativasMin == 0)
+            {
+                tentativasMin = 300;
+
+            }
+        }
         if (tentativasMin != 300)
         {
-            GameObject.Find("TentativaMin").GetComponent<Text>().text = ("Menor Tentativa = " + tentativasMin);
+            GameObject.Find("TentativaMin").GetComponent<Text>().text = ("Tentativa minima = " + tentativasMin);
         }
+
     }
 
-    // Update is called once per frame
+    /// <summary>
+    /// Update is called once per frame
+    /// </summary>
     void Update()
     {
-
         if (timerAcionado)
         {
             timer += Time.deltaTime;
@@ -111,6 +156,7 @@ public class ManageCartas : MonoBehaviour
             {
                 timerPausado = true;
                 timerAcionado = false;
+
                 if (carta1.tag == carta2.tag)
                 {
                     Destroy(carta1);
@@ -118,13 +164,15 @@ public class ManageCartas : MonoBehaviour
                     numAcertos++;
                     somOk.Play();
 
+                    // Verifica condicao de termino do jogo
                     if (numAcertos >= infoPorModo[modoJogo].Acertos)
                     {
+                        // Armazena tentativas do jogador
                         ChecarTentativaAnterior();
                         ChecarTentativas();
-
                         PlayerPrefs.Save();
 
+                        // Decide a cena com base na condicao de vitoria
                         var cena = (numTentativas <= infoPorModo[modoJogo].Vitoria) ? "Vitoria" : "Derrota";
                         SceneManager.LoadScene(cena);
                     }
@@ -134,17 +182,20 @@ public class ManageCartas : MonoBehaviour
                     carta1.GetComponent<Tile>().EscondeCarta();
                     carta2.GetComponent<Tile>().EscondeCarta();
                 }
+
+                // Finaliza o timer e zera variaveis relacionadas
                 primeiraCartaSelecionada = false;
                 segundaCartaSelecionada = false;
                 carta1 = null;
                 carta2 = null;
-                linhaCarta1 = "";
-                linhaCarta2 = "";
                 timer = 0;
             }
         }
     }
 
+    /// <summary>
+    /// Exibe as cartas na mesa, de acordo com o modo de jogo
+    /// </summary>
     void MostraCartas()
     {
         List<List<(int, int)>> baralho;
@@ -154,6 +205,7 @@ public class ManageCartas : MonoBehaviour
         var camera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         Vector3 centro;
 
+        // Monta a mesa de uma forma diferente para cada modo de jogo
         switch (modoJogo)
         {
             case ModoJogo.Normal:
@@ -162,9 +214,10 @@ public class ManageCartas : MonoBehaviour
 
                 centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
 
+                // Para cada linha, gera um baralho de 13 cartas de mesmo nipe e adiciona as cartas na mesa
                 for (int i = 0; i < linhas; i++)
                 {
-                    baralho = Embaralha(
+                    baralho = Embaralhar(
                         new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
                         new List<int> { 0 },
                         1,
@@ -184,9 +237,13 @@ public class ManageCartas : MonoBehaviour
 
                 centro = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 1.0f));
 
+                /*
+                    Para cada linha, gera um baralho de 13 cartas de mesmo nipe e adiciona as cartas na mesa,
+                    informando o grupo de cada linha e, consequentemente, alterando o averso das cartas de cada linha
+                */
                 for (int i = 0; i < linhas; i++)
                 {
-                    baralho = Embaralha(
+                    baralho = Embaralhar(
                         new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 },
                         new List<int> { 0 },
                         1,
@@ -204,17 +261,22 @@ public class ManageCartas : MonoBehaviour
                 linhas = 4;
                 colunas = 4;
 
+                // Define centros para separar a exibicao das cartas em dois grupos
                 var centros = new List<Vector3>()
                 {
                     camera.ViewportToWorldPoint(new Vector3(0.25f, 0.5f, 1.0f)),
                     camera.ViewportToWorldPoint(new Vector3(0.75f, 0.5f, 1.0f))
                 };
 
+                /*
+                    Itera por cada grupo de cartas e, para cada uma delas, gera um baralho 4x4
+                    e adiciona as cartas na mesa
+                */
                 for (int g = 0; g < 2; g++)
                 {
                     centro = centros[g];
 
-                    baralho = Embaralha(
+                    baralho = Embaralhar(
                         new List<int> { 0, 10, 11, 12 },
                         new List<int> { 0, 1, 2, 3 },
                         linhas,
@@ -234,6 +296,17 @@ public class ManageCartas : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Adiciona uma carta para ser exibida na mesa
+    /// </summary>
+    /// <param name="nipe">Nipe da carta</param>
+    /// <param name="numero">Numero da carta</param>
+    /// <param name="grupo">Grupo da carta, decide a cor do averso</param>
+    /// <param name="linha">Linha em que a carta sera inserida</param>
+    /// <param name="coluna">Coluna em que a carta sera inserida</param>
+    /// <param name="linhas">Total de linhas de cartas a serem adicionadas na mesa</param>
+    /// <param name="colunas">Total de colunas de cartas a serem adicionadas na mesa</param>
+    /// <param name="centro">Relativo a qual ponto centralizar as cartas</param>
     void AddUmaCarta(int nipe, int numero, int grupo, int linha, int coluna, int linhas, int colunas, Vector3 centro)
     {
         var escalaCartaOriginalX = carta.transform.localScale.x;
@@ -241,6 +314,7 @@ public class ManageCartas : MonoBehaviour
         var fatorEscalaX = (650 * escalaCartaOriginalX) / 100.0f;
         var fatorEscalaY = (945 * escalaCartaOriginalY) / 100.0f;
 
+        // Centraliza a carta conforme o centro informado no parametro
         var novaPosicao = new Vector3(
             centro.x + (coluna - colunas / 2.0f) * fatorEscalaX,
             centro.y + (linha - linhas / 2.0f) * fatorEscalaY,
@@ -250,6 +324,7 @@ public class ManageCartas : MonoBehaviour
         c.tag = $"{nipe}_{numero}";
         c.name = $"{grupo}_{linha}_{nipe}_{numero}";
 
+        // Realiza tratamento especial quando o numero da carta eh especial (letras)
         var numeroDaCarta = "";
         switch (numero)
         {
@@ -260,6 +335,7 @@ public class ManageCartas : MonoBehaviour
             default: numeroDaCarta = $"{(numero + 1)}"; break;
         }
 
+        // Mapeia numero de nipe para o nipe em si
         var nipeDaCarta = "";
         switch (nipe)
         {
@@ -280,9 +356,19 @@ public class ManageCartas : MonoBehaviour
         }
     }
 
-    public List<List<(int, int)>> Embaralha(List<int> valores, List<int> nipes, int linhas, int colunas)
+    /// <summary>
+    /// Embaralha as cartas com base nas cartas / nipes informados e na organizacao grid das cartas
+    /// </summary>
+    /// <param name="valores">Numeros de cartas a serem embaralhadas</param>
+    /// <param name="nipes">Nipes de cartas a serem embaralhadas</param>
+    /// <param name="linhas">Quantidade de linhas para embaralhar as cartas</param>
+    /// <param name="colunas">Quantidade de colunas para embaralhar as cartas</param>
+    /// <returns>Lista de cartas embaralhadas, em que o item1 eh o nipe da carta e o item2 eh o numero da carta</returns>
+    public List<List<(int, int)>> Embaralhar(List<int> valores, List<int> nipes, int linhas, int colunas)
     {
         var cartas = new List<(int, int)>();
+
+        // Gera todas as combinacoes de numeros de cartas + nipes
         foreach (var n in nipes)
         {
             foreach (var v in valores)
@@ -291,6 +377,7 @@ public class ManageCartas : MonoBehaviour
             }
         }
 
+        // Embaralha as combinacoes geradas, organizando conforme a quantidade de linhas e colunas
         var baralho = new List<List<(int, int)>>();
         for (int i = 0; i < linhas; i++)
         {
@@ -307,22 +394,25 @@ public class ManageCartas : MonoBehaviour
         return baralho;
     }
 
+    /// <summary>
+    /// Acao realizada quando uma carta eh selecionada
+    /// </summary>
+    /// <param name="carta">Carta que foi selecionada</param>
     public void CartaSelecionada(GameObject carta)
     {
         if (!primeiraCartaSelecionada)
         {
             string linha = carta.name.Substring(0, 1);
-            linhaCarta1 = linha;
             primeiraCartaSelecionada = true;
             carta1 = carta;
             carta1.GetComponent<Tile>().RevelaCarta();
         }
         else if (primeiraCartaSelecionada && !segundaCartaSelecionada)
         {
+            // Se a mesma carta foi selecionada duas vezes, desconsiderar
             if (carta1.name == carta.name) return;
 
             string linha = carta.name.Substring(0, 1);
-            linhaCarta2 = linha;
             segundaCartaSelecionada = true;
             carta2 = carta;
             carta2.GetComponent<Tile>().RevelaCarta();
@@ -330,27 +420,35 @@ public class ManageCartas : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Atualiza as tentativas quando duas cartas foram selecionadas e precisam ser verificadas
+    /// </summary>
     public void VerificaCarta()
     {
         DisparaTimer();
         numTentativas++;
         UpdateTentativas();
-
-
     }
 
+    /// <summary>
+    /// Dispara o timer de verificacao das cartas.
+    /// </summary>
     public void DisparaTimer()
     {
         timerPausado = false;
         timerAcionado = true;
     }
 
+    /// <summary>
+    /// Atualiza as tentativas
+    /// </summary>
     void UpdateTentativas()
     {
         GameObject.Find("numTentativas").GetComponent<Text>().text = "Tentativas: " + numTentativas;
 
     }
 
+    /* Usado para checar o numero de tentativas menor já feito no jogo */
     public void ChecarTentativas()
     {
         if (tentativasMin > numTentativas)
@@ -361,6 +459,7 @@ public class ManageCartas : MonoBehaviour
         }
     }
 
+    /* Usado para checar o numero de tentativas obtido na partida anterior */
     public void ChecarTentativaAnterior()
     {
         tentativasAnterior = numTentativas;
