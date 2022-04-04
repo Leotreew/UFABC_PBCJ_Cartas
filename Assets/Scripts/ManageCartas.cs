@@ -288,10 +288,11 @@ public class ManageCartas : MonoBehaviour
             primeiraCartaSelecionada = true;
             carta1 = carta;
             carta1.GetComponent<Tile>().RevelaCarta();
-    
         }
         else if (primeiraCartaSelecionada && !segundaCartaSelecionada)
         {
+            if (carta1.name == carta.name) return;
+
             string linha = carta.name.Substring(0, 1);
             linhaCarta2 = linha;
             segundaCartaSelecionada = true;
