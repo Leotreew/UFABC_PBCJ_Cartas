@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ModoQuadiletras.unity
     guid: df061f8aede81df43904de42c56a68e7
+  - enabled: 1
+    path: Assets/Scenes/Creditos.unity
+    guid: 18ba972073fbb2c42bae561252d61e2e
   m_configObjects: {}
