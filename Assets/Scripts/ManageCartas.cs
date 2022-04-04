@@ -100,7 +100,7 @@ public class ManageCartas : MonoBehaviour
     {
         {ModoJogo.Normal, new ModoJogoConfig() { Acertos = 13, Vitoria = 45 }},
         {ModoJogo.Duo, new ModoJogoConfig() { Acertos = 13, Vitoria = 45 }},
-        {ModoJogo.Quadiletras, new ModoJogoConfig() { Acertos = 13, Vitoria = 68 }},
+        {ModoJogo.Quadiletras, new ModoJogoConfig() { Acertos = 16, Vitoria = 68 }},
     };
 
     /// <summary>
